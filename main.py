@@ -3,64 +3,69 @@ import cv2
 import numpy as np
 import mss
 import math
-from collections import namedtuple
+import time
 
 def find_track_region(dino_path):
     continue_searching = True
+    dino_dummy = cv2.imread(dino_path, 0)
 
-    while continue_searching:
-        print('start next iteration iteration')
-        location = pag.locateOnScreen(dino_path, confidence=0.7, grayscale=True)
+    with mss.mss() as sct:
 
-        if location:
-            continue_searching = False
-            d_left, d_top, d_width, d_height = location
+        while continue_searching:
+            sct_img = np.array(sct.grab(sct.monitors[1]))
+            full_screen = cv2.cvtColor(sct_img, cv2.COLOR_RGB2GRAY)
+            res = cv2.matchTemplate(full_screen, dino_dummy, cv2.TM_CCOEFF_NORMED)
+            threshold = 0.9
+            loc = np.where(res >= threshold)
 
-            track_region = namedtuple('Box', ['left', 'top', 'width', 'height'])
+            if len(loc[1]) > 0:
+                continue_searching = False
+                d_top = loc[0][0] 
+                d_left = loc[1][0]
+                d_height = 72
+                d_width = 83
 
-            return track_region(
-                left = math.floor(d_left - 0.5 * d_width), 
-                top = d_top - 2 * d_height, 
-                width = 10 * d_width, 
-                height = 4 * d_height
-            )
-
-# def same_on_gui(track_region):
-#     in_game = True
-
-#     while in_game:
-#         track_screen_shot = pag.locateOnScreen(
-#             'assets/cactus_day.png', region=track_region, confidence=0.6, grayscale=True)
-
-#         if track_screen_shot:
-#             if track_screen_shot.left - track_screen_shot[0] < 150:
-#                 print(track_screen_shot)
-#                 pag.press('space')
-
-#         print('screen shot in a memory')
+                print(math.floor((d_left - 0.5 * d_width)/2))
+                # TODO move the correction for retina display to a helper
+                return {
+                    "top": math.floor((d_top - 2 * d_height) / 2),
+                    "left": math.floor((d_left - 0.5 * d_width)/2),
+                    "width": 5 * d_width,
+                    "height": 2 * d_height,
+                }
 
 def run_game_loop(track_region):
     cactus = cv2.imread('assets/cactus_day.png', 0)
 
-    while True:
-        track_screen_shot = pag.screenshot(region=track_region)
-        track = cv2.cvtColor(np.array(track_screen_shot), cv2.COLOR_RGB2GRAY)
-        res = cv2.matchTemplate(track, cactus, cv2.TM_CCOEFF_NORMED)
-        threshold = 0.8
-        loc = np.where(res >= threshold)
+    with mss.mss() as sct:
+        while True:
+            track_screen_shot = np.array(sct.grab(track_region))
+            track = cv2.cvtColor(track_screen_shot, cv2.COLOR_RGB2GRAY)
+            res = cv2.matchTemplate(track, cactus, cv2.TM_CCOEFF_NORMED)
+            threshold = 0.7
+            loc = np.where(res >= threshold)
 
-        print(loc);
+            for pt in zip(*loc[::-1]):
+                cv2.rectangle(track, pt, (pt[0] + 50, pt[1] + 50), (0,0,255), 1)
 
-        for pt in zip(*loc):
-            if pt[1] < 500:
+            cv2.imshow('OpenCV/Numpy grayscale', track)
+
+            for pt in zip(*loc[::-1]):
+                print("Jump?")
                 print(pt)
-                pag.press('space')
+                if pt[0] < 360:
+                    print(loc)
+                    print(pt)
+                    print('---------')
+                    pag.press('space')
+                    break
 
-        print('screen shot in a memory')
+            if cv2.waitKey(25) & 0xFF == ord("q"):
+                cv2.destroyAllWindows()
+                break
 
-        if cv2.waitKey(25) & 0xFF == ord("q"):
-            cv2.destroyAllWindows()
-            break
+            time.sleep(0.01)
+
 
 
 if __name__ == '__main__':
