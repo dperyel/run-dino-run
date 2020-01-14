@@ -10,8 +10,9 @@ It gives me a possibility to get a screen and perform multi matching on the scre
 *Note:* it works correctly only with retina display so far. And screenshot is taken on 1st monitor (in case you use several of them)
 To run the script:
 ```
-python main.py
+python3 run.py
 ```
+You also need some additional libraries installed: `numpy, opencv-python, pyautogui, mss`
 
 Firs script tries to find a Dino. When Dino is detected the script searches for the cactuses on a screen and if it's too close a press event on `space` key is emitted.
 
