@@ -36,6 +36,37 @@ def find_track_region(dino_path):
 def read_image_gray(path):
     return cv2.imread(path, 0)
 
+def group_coords(coords, threshold=20):
+    print(coords)
+    if len(coords) == 0:
+        return []
+
+    sorted_coords = sorted(coords, key=lambda tup: tup[0])
+    diameter = 2*threshold
+    clasters = [[sorted_coords[0]]]
+
+    pivot = sorted_coords[0]
+    index = 0
+
+    for coord in sorted_coords[1:]:
+        if coord[0] - pivot[0] > diameter:
+            index += 1
+            pivot = coord
+            clasters.append([coord])
+        else:
+            clasters[index].append(coord)
+
+    means = map(lambda claster: _mean_coord(claster), clasters)
+    
+    return list(means)
+
+def _mean_coord(claster):
+    length = len(claster)
+    mean_x = sum(map(lambda coord: coord[0], claster)) / length
+    mean_y = sum(map(lambda coord: coord[1], claster)) / length
+
+    return (math.floor(mean_x), math.floor(mean_y))
+
 def run_game_loop(track_region, effects):
     cactus = read_image_gray('assets/cactus_day.png')
 
