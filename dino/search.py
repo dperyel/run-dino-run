@@ -1,4 +1,3 @@
-import pyautogui as pag
 import cv2
 import numpy as np
 import mss
@@ -7,7 +6,7 @@ import time
 
 def find_track_region(dino_path):
     continue_searching = True
-    dino_dummy = cv2.imread(dino_path, 0)
+    dino_dummy = read_image_gray(dino_path)
 
     with mss.mss() as sct:
 
@@ -15,7 +14,7 @@ def find_track_region(dino_path):
             sct_img = np.array(sct.grab(sct.monitors[1]))
             full_screen = cv2.cvtColor(sct_img, cv2.COLOR_RGB2GRAY)
             res = cv2.matchTemplate(full_screen, dino_dummy, cv2.TM_CCOEFF_NORMED)
-            threshold = 0.9
+            threshold = 0.95
             loc = np.where(res >= threshold)
 
             if len(loc[1]) > 0:
@@ -34,8 +33,42 @@ def find_track_region(dino_path):
                     "height": 2 * d_height,
                 }
 
-def run_game_loop(track_region):
-    cactus = cv2.imread('assets/cactus_day.png', 0)
+def read_image_gray(path):
+    return cv2.imread(path, 0)
+
+def group_coords(coords, threshold=20):
+    print(coords)
+    if len(coords) == 0:
+        return []
+
+    sorted_coords = sorted(coords, key=lambda tup: tup[0])
+    diameter = 2*threshold
+    clasters = [[sorted_coords[0]]]
+
+    pivot = sorted_coords[0]
+    index = 0
+
+    for coord in sorted_coords[1:]:
+        if coord[0] - pivot[0] > diameter:
+            index += 1
+            pivot = coord
+            clasters.append([coord])
+        else:
+            clasters[index].append(coord)
+
+    means = map(lambda claster: _mean_coord(claster), clasters)
+    
+    return list(means)
+
+def _mean_coord(claster):
+    length = len(claster)
+    mean_x = sum(map(lambda coord: coord[0], claster)) / length
+    mean_y = sum(map(lambda coord: coord[1], claster)) / length
+
+    return (math.floor(mean_x), math.floor(mean_y))
+
+def run_game_loop(track_region, effects):
+    cactus = read_image_gray('assets/cactus_day.png')
 
     with mss.mss() as sct:
         while True:
@@ -57,7 +90,7 @@ def run_game_loop(track_region):
                     print(loc)
                     print(pt)
                     print('---------')
-                    pag.press('space')
+                    effects.press_key('space')
                     break
 
             if cv2.waitKey(25) & 0xFF == ord("q"):
@@ -65,9 +98,3 @@ def run_game_loop(track_region):
                 break
 
             time.sleep(0.01)
-
-
-
-if __name__ == '__main__':
-    track_region = find_track_region('assets/dino_day.png')
-    run_game_loop(track_region)
