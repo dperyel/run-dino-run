@@ -1,3 +1,5 @@
+"""All effects should be declared in this module"""
+
 class Effects():
     """
     Effect is ready to get an IO system to trigger side effects
@@ -8,5 +10,9 @@ class Effects():
         self.io_system = io_system
 
     def press_key(self, key_name):
-        print(f'Pressing a {key_name}')
+        """Triggers effect pressing on a key"""
         self.io_system.press(key_name)
+
+    def grab(self):
+        """Take a screenshot"""
+        self.io_system.grab()
