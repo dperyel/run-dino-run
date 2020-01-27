@@ -6,19 +6,17 @@ import numpy as np
 import mss
 
 def dino_search(dino_dummy, full_screen):
-    """Gets a screen shot in cv2 gray format together with dino template"""
+    """Gets a screen shot in cv2 gray format together with dino template
+
+    Region is found when when dino is matched with more then 99% probability
+    """
 
     res = cv2.matchTemplate(full_screen, dino_dummy, cv2.TM_CCOEFF_NORMED)
-    threshold = 0.95
-    loc = np.where(res >= threshold)
+    _, max_val, _, max_loc = cv2.minMaxLoc(res)
 
-    if len(loc[1]) > 0:
-        d_top = loc[0][0]
-        d_left = loc[1][0]
-        d_height = 72
-        d_width = 83
-
-        print(math.floor((d_left - 0.5 * d_width)/2))
+    if max_val > 0.99:
+        d_left, d_top = max_loc
+        d_height, d_width = (72, 83)
 
         # NOTE that all attributes are divided by 2 it's needed to avoid
         # twice bigger capture region on retina display
