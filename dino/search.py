@@ -5,43 +5,51 @@ import cv2
 import numpy as np
 import mss
 
-def find_track_region(dino_path):
-    """Find dino on a screen and register a region where to find obstacles
-    """
+def dino_search(dino_dummy, full_screen):
+    """Gets a screen shot in cv2 gray format together with dino template"""
+
+    res = cv2.matchTemplate(full_screen, dino_dummy, cv2.TM_CCOEFF_NORMED)
+    threshold = 0.95
+    loc = np.where(res >= threshold)
+
+    if len(loc[1]) > 0:
+        d_top = loc[0][0]
+        d_left = loc[1][0]
+        d_height = 72
+        d_width = 83
+
+        print(math.floor((d_left - 0.5 * d_width)/2))
+
+        # NOTE that all attributes are divided by 2 it's needed to avoid
+        # twice bigger capture region on retina display
+        # Consider to fix it by analizing the monitor settings
+        return {
+            "top": math.floor((d_top - 2 * d_height) / 2),
+            "left": math.floor((d_left + d_width)/2),
+            "width": 5 * d_width,
+            "height": 2 * d_height,
+        }
+
+
+def find_track_region(dino_path, dino_search_callback):
+    """Find dino on a screen and register a region where to find obstacles"""
 
     with mss.mss() as sct:
-        continue_searching = True
         dino_dummy = cv2.imread(dino_path, 0)
 
-        while continue_searching:
+        while True:
             sct_img = np.array(sct.grab(sct.monitors[1]))
             full_screen = cv2.cvtColor(sct_img, cv2.COLOR_RGB2GRAY)
-            res = cv2.matchTemplate(full_screen, dino_dummy, cv2.TM_CCOEFF_NORMED)
-            threshold = 0.95
-            loc = np.where(res >= threshold)
-
-            if len(loc[1]) > 0:
-                continue_searching = False
-                d_top = loc[0][0]
-                d_left = loc[1][0]
-                d_height = 72
-                d_width = 83
-
-                print(math.floor((d_left - 0.5 * d_width)/2))
-
-                # NOTE that all attributes are divided by 2 it's needed to avoid
-                # twice bigger capture region on retina display
-                # Consider to fix it by analizing the monitor settings
-                return {
-                    "top": math.floor((d_top - 2 * d_height) / 2),
-                    "left": math.floor((d_left + d_width)/2),
-                    "width": 5 * d_width,
-                    "height": 2 * d_height,
-                }
+            coords = dino_search_callback(dino_dummy, full_screen)
+            if coords:
+                return coords
 
 def group_coords(coords, threshold=20):
-    """Grouping coordinates to the clusters with a giving threshold"""
-    print(coords)
+    """Grouping coordinates to the clusters with a giving threshold
+
+    Expects list of tuples: [(x, y)]
+    """
+
     if len(coords) == 0:
         return []
 
@@ -86,16 +94,15 @@ def run_game_loop(track_region, effects):
             res = cv2.matchTemplate(track, cactus, cv2.TM_CCOEFF_NORMED)
             threshold = 0.7
             loc = np.where(res >= threshold)
-            _, max_val, _, max_loc = cv2.minMaxLoc(res)
+            loc = list(zip(*loc[::-1]))
+            loc = group_coords(loc, 10)
 
-            if max_val > 0.7:
-                cv2.rectangle(track, max_loc, (max_loc[0] + 50, max_loc[1] + 50), (0, 0, 255), 1)
-            # for pt in zip(*loc[::-1]):
-            #     cv2.rectangle(track, pt, (pt[0] + 50, pt[1] + 50), (0,0,255), 1)
+            for point in loc:
+                cv2.rectangle(track, point, (point[0] + 50, point[1] + 50), (0, 0, 255), 1)
 
             cv2.imshow('OpenCV/Numpy grayscale', track)
 
-            for point in zip(*loc[::-1]):
+            for point in loc:
                 if point[0] < 280:
                     effects.press_key('space')
                     break
