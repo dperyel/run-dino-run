@@ -22,10 +22,10 @@ def dino_search(dino_dummy, full_screen):
         # twice bigger capture region on retina display
         # Consider to fix it by analizing the monitor settings
         return {
-            "top": math.floor((d_top - 2 * d_height) / 2),
-            "left": math.floor((d_left + d_width)/2),
-            "width": 5 * d_width,
-            "height": 2 * d_height,
+            'top': math.floor((d_top - 2 * d_height) / 2),
+            'left': math.floor((d_left + d_width)/2),
+            'width': 5 * d_width,
+            'height': 2 * d_height,
         }
 
 
