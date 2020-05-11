@@ -1,6 +1,6 @@
 import cv2
 
-def find_borders(img):
+def find_edges(img):
     return cv2.Canny(img, threshold1=0, threshold2=255)
 
 def group_features(binary_canvas):
