@@ -16,6 +16,10 @@ You also need some additional libraries installed: `numpy, opencv-python, pyauto
 
 Firs script tries to find a Dino. When Dino is detected the script searches for the cactuses on a screen and if it's too close a press event on `space` key is emitted.
 
+## Requirements
+
+Please notise that the repository uses a *git LFS* to store binary files. You need to install it in case you want to get the complete project: https://git-lfs.github.com
+
 ## Room for improvements:
 
 
