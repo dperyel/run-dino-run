@@ -1,0 +1,15 @@
+name: dino
+channels:
+  - defaults
+dependencies:
+  - pip=20.0.2=py37_1
+  - pylint=2.5.0=py37_0
+  - python=3.7.7=hc70fcce_0_cpython
+  - pip:
+    - cycler==0.10.0
+    - kiwisolver==1.2.0
+    - matplotlib==3.2.1
+    - numpy==1.18.4
+    - opencv-python==4.2.0.34
+    - pyparsing==2.4.7
+    - python-dateutil==2.8.1
