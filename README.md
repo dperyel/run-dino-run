@@ -18,7 +18,7 @@ Firs script tries to find a Dino. When Dino is detected the script searches for 
 
 ## Requirements
 
-Please notise that the repository uses a *git LFS* to store binary files. You need to install it in case you want to get the complete project: https://git-lfs.github.com
+Please notisce that the repository uses a *git LFS* to store binary files. You need to install it in case you want to get the complete project: https://git-lfs.github.com
 
 ## Room for improvements:
 
