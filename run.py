@@ -44,7 +44,7 @@ def capture_region(region):
     with mss.mss() as sct:
         monitor_region = {**region, 'monitor': sct.monitors[1]}
         jump_time = 0.6
-        speed_pool = [0 for _ in range(15)]
+        speed_pool = [500 for _ in range(90)] # initial speed is ±500px/s
         speed_median = 0
 
         prev_state = {
@@ -77,9 +77,11 @@ def capture_region(region):
                 prev_state['closest_element'] = features[0]
 
                 speed_median = np.median(speed_pool)
-                dinamic_distance = 30 + 0.000095 * speed_median ** 2
+                # dinamic_distance = 35 + 0.00028 * (speed_median ** 2)
+                dinamic_distance = 35 + 0.028 * speed_median
                 if features[0][0] < (dinamic_distance + features[0][1]):
                     pag.press('space')
+                    time.sleep(0.5) # 0.5 is a time in air when Dino jumps
 
             for left, width in features:
                 cv2.rectangle(gray_area, (left, 1), (left + width, 2 * region['height'] - 1), color=(150, 150, 150), thickness=2)
